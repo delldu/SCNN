@@ -143,3 +143,34 @@ class SCNN(nn.Module):
             elif isinstance(m, nn.BatchNorm2d):
                 m.weight.data[:] = 1.
                 m.bias.data.zero_()
+
+
+if __name__ == '__main__':
+    import time
+    from tqdm import tqdm
+
+    use_gpu = False
+    epochs = 100
+    heigh = 720
+    width = 1280
+
+    model = SCNN(input_size=(heigh, width), pretrained=False)
+    # print(model)
+    input = torch.rand(1, 3, heigh, width)
+
+    model.eval()
+    if use_gpu:
+        model = model.cuda()
+        input = input.cuda()
+
+    start = time.time()
+    for i in tqdm(range(epochs)):
+        with torch.no_grad():
+           output = model(input)
+    spends = (time.time() - start)*1000/epochs
+
+    print("Average spend {} ms".format(spends))
+    # GPU Average spend 395.5410861968994 ms
+    # CPU Average spend 5552.44259595871 ms
+
+
