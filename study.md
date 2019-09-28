@@ -3,5 +3,5 @@
 `sudo apt-get install libopencv-dev`
 
 # 2. Run demo with command
-`./demo.sh`
+`./tusimple_demo.sh demo/tusimple.jpg`
 
