@@ -6,10 +6,14 @@ from model import SCNN
 from utils.prob2lines import getLane
 from utils.transforms import *
 
-net = SCNN(input_size=(800, 288), pretrained=False)
+import pdb
+
+image_resize_width = 800
+
+net = SCNN(input_size=(image_resize_width, 288), pretrained=False)
 mean=(0.3598, 0.3653, 0.3662) # CULane mean, std
 std=(0.2573, 0.2663, 0.2756)
-transform = Compose(Resize((800, 288)), ToTensor(),
+transform = Compose(Resize((image_resize_width, 288)), ToTensor(),
                     Normalize(mean=mean, std=std))
 
 
@@ -43,15 +47,15 @@ def main():
     exist = [1 if exist_pred[0, i] > 0.5 else 0 for i in range(4)]
 
     img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-    img = cv2.resize(img, (800, 288))
+    img = cv2.resize(img, (image_resize_width, 288))
     lane_img = np.zeros_like(img)
     color = np.array([[255, 125, 0], [0, 255, 0], [0, 0, 255], [0, 255, 255]], dtype='uint8')
     coord_mask = np.argmax(seg_pred, axis=0)
     for i in range(0, 4):
         if exist_pred[0, i] > 0.5:
             lane_img[coord_mask == (i + 1)] = color[i]
+    cv2.imshow("lane", lane_img)
     img = cv2.addWeighted(src1=lane_img, alpha=0.8, src2=img, beta=1., gamma=0.)
-    cv2.imwrite("demo/demo_result.jpg", img)
 
     for x in getLane.prob2lines_CULane(seg_pred, exist):
         print(x)
@@ -61,6 +65,8 @@ def main():
         cv2.imshow("", img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
+    else:
+        cv2.imwrite("demo/demo_result.jpg", img)
 
 
 if __name__ == "__main__":

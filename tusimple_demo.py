@@ -5,12 +5,17 @@ import torch
 from model import SCNN
 from utils.prob2lines import getLane
 from utils.transforms import *
+import time
+from tqdm import tqdm
 
 import pdb
 
 image_resize_width = 512
 
 net = SCNN(input_size=(image_resize_width, 288), pretrained=False)
+if torch.cuda.is_available():
+    net = net.cuda()
+
 mean=(0.3598, 0.3653, 0.3662) # CULane mean, std
 std=(0.2573, 0.2663, 0.2756)
 transform = Compose(Resize((image_resize_width, 288)), ToTensor(),
@@ -41,7 +46,34 @@ def main():
     net.load_state_dict(save_dict['net'])
     net.eval()
 
+    if torch.cuda.is_available():
+        x = x.cuda()
+    
+    # start_time = time.time()
+    # for i in tqdm(range(100)):
+    #     seg_pred, exist_pred = net(x)[:2]
+    # print("Spend time {} seconds for 100 times".format(time.time() - start_time))
+    # CPU spend time 64.43067598342896 seconds for 100 times, --> 640ms
+    # GPU spend time 7.734357118606567 seconds for 100 times, --> 70ms
+
     seg_pred, exist_pred = net(x)[:2]
+    # pdb.set_trace()
+    # (pdb) pp x.shape
+    # torch.Size([1, 3, 288, 512])
+
+    # (pdb) pp seg_pred.shape
+    # torch.Size([1, 5, 288, 512])
+
+    # (Pdb) pp seg_pred.min(), seg_pred.max()
+    # (tensor(-13.8127, device='cuda:0', grad_fn=<MinBackward1>),
+    # tensor(26.3522, device='cuda:0', grad_fn=<MaxBackward1>))
+
+    # (Pdb) pp exist_pred.shape, exist_pred
+    # (torch.Size([1, 4]),
+    #  tensor([[0.9989, 0.9999, 0.9993, 0.9983]], device='cuda:0',
+    #        grad_fn=<SigmoidBackward>))
+
+
     seg_pred = seg_pred.detach().cpu().numpy()
     exist_pred = exist_pred.detach().cpu().numpy()
     seg_pred = seg_pred[0]
@@ -56,8 +88,12 @@ def main():
         if exist_pred[0, i] > 0.5:
             lane_img[coord_mask == (i + 1)] = color[i]
     cv2.imshow("lane", lane_img)
-    img = cv2.addWeighted(src1=lane_img, alpha=0.8, src2=img, beta=1., gamma=0.)
 
+    # pdb.set_trace()
+    # (Pdb) seg_pred.shape, coord_mask.shape
+    # ((5, 288, 512), (288, 512))
+
+    img = cv2.addWeighted(src1=lane_img, alpha=0.8, src2=img, beta=1., gamma=0.)
     for x in getLane.prob2lines_CULane(seg_pred, exist):
         print(x)
 
