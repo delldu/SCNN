@@ -291,7 +291,7 @@ if __name__ == '__main__':
     import time
     from tqdm import tqdm
 
-    use_gpu = False
+    use_gpu = True
     epochs = 100
     heigh = 720
     width = 1280
@@ -309,7 +309,7 @@ if __name__ == '__main__':
     for i in tqdm(range(epochs)):
         with torch.no_grad():
            output = model(input)
-    spends = (time.time() - start)*1000/epochs
+    spends = (time.time() - start) * 1000.0 / epochs  # 1s = 1000 ms
 
     print("Average spend {} ms".format(spends))
     # GPU Average spend 395.5410861968994 ms

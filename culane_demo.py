@@ -11,17 +11,28 @@ import pdb
 image_resize_width = 800
 
 net = SCNN(input_size=(image_resize_width, 288), pretrained=False)
-mean=(0.3598, 0.3653, 0.3662) # CULane mean, std
-std=(0.2573, 0.2663, 0.2756)
+mean = (0.3598, 0.3653, 0.3662)  # CULane mean, std
+std = (0.2573, 0.2663, 0.2756)
 transform = Compose(Resize((image_resize_width, 288)), ToTensor(),
                     Normalize(mean=mean, std=std))
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--img_path", '-i', type=str, default="demo/demo.jpg", help="Path to demo img")
-    parser.add_argument("--weight_path", '-w', type=str, help="Path to model weights")
-    parser.add_argument("--visualize", '-v', action="store_true", default=False, help="Visualize the result")
+    parser.add_argument("--img_path",
+                        '-i',
+                        type=str,
+                        default="demo/demo.jpg",
+                        help="Path to demo img")
+    parser.add_argument("--weight_path",
+                        '-w',
+                        type=str,
+                        help="Path to model weights")
+    parser.add_argument("--visualize",
+                        '-v',
+                        action="store_true",
+                        default=False,
+                        help="Visualize the result")
     args = parser.parse_args()
     return args
 
@@ -49,13 +60,18 @@ def main():
     img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
     img = cv2.resize(img, (image_resize_width, 288))
     lane_img = np.zeros_like(img)
-    color = np.array([[255, 125, 0], [0, 255, 0], [0, 0, 255], [0, 255, 255]], dtype='uint8')
+    color = np.array([[255, 125, 0], [0, 255, 0], [0, 0, 255], [0, 255, 255]],
+                     dtype='uint8')
     coord_mask = np.argmax(seg_pred, axis=0)
     for i in range(0, 4):
         if exist_pred[0, i] > 0.5:
             lane_img[coord_mask == (i + 1)] = color[i]
     cv2.imshow("lane", lane_img)
-    img = cv2.addWeighted(src1=lane_img, alpha=0.8, src2=img, beta=1., gamma=0.)
+    img = cv2.addWeighted(src1=lane_img,
+                          alpha=0.8,
+                          src2=img,
+                          beta=1.,
+                          gamma=0.)
 
     for x in getLane.prob2lines_CULane(seg_pred, exist):
         print(x)
